@@ -3,6 +3,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup as bs
 from urllib.parse import urlparse
 import csv
+import shutil
 
 down = 1
 domain = ""
@@ -39,17 +40,18 @@ def get_image(content, url):
                 data = requests.get(im, headers=headers)
             except:
                 if im:
-                    print("no image to:"+ im,end="")
+                    print("no image to:"+ im)
                 else:
-                    print("fail to get image",end="")
+                    print("fail to get image")
                 continue
             if data.status_code == 403:
                 print("Status for %s: %i"%(im, data.status_code))
                 continue
         toPrint = (im[:size] + "..." + im[(len(im) - size):]) if len(im) > (size*2) else im
         print("image:{:<50}".format(toPrint),end="\t")
-        if im and not im in image_lst and '.' + '.'.join(im.split('.')[-1:]) in extensions:
-            name = path + str(down) + '.' + '.'.join(im.split('.')[-1:])
+        ext = '.' + '.'.join(im.split('.')[-1:])
+        if im and not im in image_lst and ext in extensions:
+            name = path + str(down) + ext
             print("{}{}".format("Downloding as: ",name))
             f = open(name,'wb')
             f.write(data.content)
@@ -58,7 +60,6 @@ def get_image(content, url):
             down += 1 
         else:
             print("{:<20}".format("not downloading."))
-#        print(headers)
 
 def get_src_image (url = "", count = 5):
     if url not in links:
@@ -86,14 +87,30 @@ def get_src_image (url = "", count = 5):
 def get_local_img(l):
     global image_lst
     global down
+    size = int(50 / 2)
     extensions = [".jpg",".jpeg",".png",".gif",".bmp"]
     path = "des/"
     b = l.find_all('img')
     for img in b:
         i = img.get('src')
-        if i and not i in image_lst and '.' + '.'.join(i.split('.')[-1:]) in extensions:
-            print(i)
-
+        ext = '.' + '.'.join(i.split('.')[-1:])
+        if i and not i in image_lst and ext in extensions:
+            origin = '/'.join(url.split('/')[:-1]) + '/' +  i[2:]
+            dest = path + str(down) + ext
+            print(origin)
+            try:
+                shutil.copy2(origin, dest)
+            except:
+                if i:
+                    print("no image to:"+ i)
+                else:
+                    print("fail to get image")
+                continue
+            else:
+                toPrint = (i[:size] + "..." + i[(len(i) - size):]) if len(i) > (size*2) else i
+                print("image:{:<50}".format(toPrint),end="\t")
+                print("{}{}{}".format("Downloding as: ",str(down),ext))
+                down += 1
 
 if __name__ == "__main__":
 #    url = "https://www.geeksforgeeks.org/python-all-function"
@@ -113,12 +130,10 @@ if __name__ == "__main__":
         b = bs(file, "html.parser")
         file.close()
     except:
-        print("nop")
         domain = ('.'.join(urlparse(url).netloc.split('.')[-2:]))
         deep = 5
         for img in  get_src_image(url, deep):
             get_image(img, url)
     else:
-        print("yep")
         get_local_img(b)
     exit()
