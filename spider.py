@@ -2,8 +2,8 @@ import requests
 from pathlib import Path
 from bs4 import BeautifulSoup as bs
 from urllib.parse import urlparse
-import csv
 import shutil
+import argparse
 
 down = 1
 domain = ""
@@ -61,7 +61,7 @@ def get_image(content, url):
         else:
             print("{:<20}".format("not downloading."))
 
-def get_src_image (url = "", count = 5):
+def get_src_image (url, count):
     if url not in links:
         links.append(url)
     else:
@@ -97,7 +97,6 @@ def get_local_img(l):
         if i and not i in image_lst and ext in extensions:
             origin = '/'.join(url.split('/')[:-1]) + '/' +  i[2:]
             dest = path + str(down) + ext
-            print(origin)
             try:
                 shutil.copy2(origin, dest)
             except:
@@ -112,28 +111,35 @@ def get_local_img(l):
                 print("{}{}{}".format("Downloding as: ",str(down),ext))
                 down += 1
 
+def parser():
+    parser = argparse.ArgumentParser(
+            prog='Spider',
+            description='Simple web scraping',
+            epilog='Is a simple web scraping')
+    parser.add_argument('url', help="url to scrap")
+    parser.add_argument('-r', '--recursive', help="recursively downloads the images in a URL received as a parameter", action='store_true')
+    parser.add_argument('-l', '--level', help='indicates the maximum depth level of the recursive download.', default=5, type=int)
+    parser.add_argument('-p', '--path', help=' indicates the path where the downloaded files will be saved.', default='./data/')
+    arg = parser.parse_args()
+    return arg
+
 if __name__ == "__main__":
-#    url = "https://www.geeksforgeeks.org/python-all-function"
-#    url = "https://docs.python.org/es/3/library/random.html"
-#    url = "https://www.42barcelona.com"
-#    url = "https://www.filmaffinity.com/es/main.html"
-#    url = "https://www.filmaffinity.com"
-#    url = "https://www.colegiolosolivos.org/"
-#    url = "https://www.colegiolosolivos.org/post/información-sobre-bachillerato"
-#    url = "https://www.florzen.com/"
-#    url = "htt://www.florzen.com/comprar/flores-en-botella/"
-    url = "/Users/juan-aga/Documents/varios/www.42malaga.com.html"
+    arg = parser()
     headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.47', 'referer':'https://www.google.com/'}
 
     try:
+        url = arg.url
         file = open(url)
         b = bs(file, "html.parser")
         file.close()
     except:
-        domain = ('.'.join(urlparse(url).netloc.split('.')[-2:]))
-        deep = 5
-        for img in  get_src_image(url, deep):
-            get_image(img, url)
+        domain = ('.'.join(urlparse(arg.url).netloc.split('.')[-2:]))
+        if arg.recursive:
+            deep = int(arg.level)
+        else:
+            deep = 0
+        for img in  get_src_image(arg.url, deep):
+            get_image(img, arg.url)
     else:
         get_local_img(b)
     exit()
