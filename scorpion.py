@@ -1,25 +1,36 @@
-from exif import Image
+import string
+import argparse
+from PIL import Image
+from PIL.ExifTags import TAGS
+#from exif import Image
 import sys
 
-print(sys.argv[1])
-img = []
-for image in sys.argv[1:]:
-    with open(image, 'rb') as file:
-        img.append(Image(file))
+def parser():
+	parser = argparse.ArgumentParser(
+		prog = "Scorpion",
+		description = "Search for EXIF data and other metadata.")
+	parser.add_argument("images", type=str, nargs="+", help="Images files to check")
+	arg = parser.parse_args()
+	return arg.images
 
-#with open(sys.argv[1], 'rb') as file:
-#    img = Image(file)
+def get_meta(files):
+	for i,file in enumerate(files):
+		print("\nImage %i:\t%s\n"%(i,file.split('/')[-1]))
+		try:
+			with Image.open(file) as fileOpen:
+				image = fileOpen
+		except:
+			print("nop")
+		else:
+			if not image.getexif():
+				print("no exif for ",file.split('/')[-1])
+				continue
+			exif = image.getexif()
+			print("\t\tEXIF")
+			for tag in exif:
+				print("tag: {:<20} {}".format(TAGS.get(tag),exif.get(tag)))
 
-for index, image in enumerate(img):
-#    print(image.getexif())
-    if image.has_exif:
-        info = f"contains EXIF\n"# {image.exif_version}\n"
-#        info += f"{image.datetime_original} {image.get('offset_time', '')}"
-        print(sorted(image.list_all()))
-#        for a,b in enumerate(exif):
-#           print(a)
-#             print(b," ",image.get(b))
-    else:
-        info = "not contains EXIF"
-#    info += f"{image.datetime_original}"#.{image.subsec_time_original}"
-    print(f"Image {index} {info}")
+if __name__ == "__main__":
+	arg = parser()
+	get_meta(arg)
+	exit()
