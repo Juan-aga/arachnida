@@ -143,7 +143,7 @@ if __name__ == "__main__":
         b = bs(file, "html.parser")
         file.close()
     except:
-        domain = ('.'.join(urlparse(arg.url).netloc.split('.')[-2:]))
+        domain = ('.'.join(urlparse(arg.url).netloc.split('.')[-2:])).lower()
         if arg.recursive:
             deep = int(arg.level)
         else:
