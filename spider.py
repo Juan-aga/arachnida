@@ -10,6 +10,14 @@ domain = ""
 links = []
 image_lst = []
 
+class colors:
+    fail = '\033[91m'
+    ok = '\033[92m'
+    purple = '\033[95m'
+    cyan = '\033[96m'
+    yellow = '\033[93m'
+    reset = '\033[0m'
+
 def get_image(content, url):
     global image_lst
     global down
@@ -36,30 +44,32 @@ def get_image(content, url):
                     if im[1] == '/':
                         im = 'https:' + im
                     else:
-                        im = url + im
+                        if url[-1] == '/':
+                            im = url[:-1] + im
+                        else:
+                            im = url + im
                 data = requests.get(im, headers=headers)
             except:
                 if im:
-                    print("no image to:"+ im)
+                    print(colors.fail + "no image to:"+ im + colors.reset)
                 else:
-                    print("fail to get image")
+                    print(colors.fail + "fail to get image" + colors.reset)
                 continue
             if data.status_code == 403:
-                print("Status for %s: %i"%(im, data.status_code))
+                print(colors.fail + "Status for %s: %i"%(im, data.status_code) + colors.reset)
                 continue
         toPrint = (im[:size] + "..." + im[(len(im) - size):]) if len(im) > (size*2) else im
-        print("image:{:<50}".format(toPrint),end="\t")
+        print(colors.cyan + "image:{:<50}".format(toPrint),end="\t" + colors.reset)
         ext = '.' + '.'.join(im.split('.')[-1:])
         if im and not im in image_lst and ext in extensions:
             name = path + str(down) + ext
-            print("{}{}".format("Downloding as: ",name))
-            f = open(name,'wb')
-            f.write(data.content)
-            f.close()
+            print(colors.ok + "{}{}".format("Downloding as: ",name) + colors.reset)
+            with open(name,'wb') as f:
+                f.write(data.content)
             image_lst.append(im)
             down += 1 
         else:
-            print("{:<20}".format("not downloading."))
+            print(colors.fail + "{:<20}".format("not downloading.") + colors.reset)
 
 def get_src_image (url, count):
     if url not in links:
@@ -69,11 +79,11 @@ def get_src_image (url, count):
     try:
         r = requests.get(url, headers=headers)
     except:
-        print("no valid link for: ",url)
+        print(colors.fail + "no valid link for: ",url + colors.reset)
         return
     content = bs(r.content, 'html.parser')
     l = content.select('a')
-    print("\nchecking images lvl: %i in: %s\n"%(deep - count, url))
+    print(colors.yellow + "\nchecking images lvl: %i in: %s\n"%(deep - count, url) + colors.reset)
     for img in l:
        headers['referer'] = url
        yield img
@@ -101,14 +111,14 @@ def get_local_img(l):
                 shutil.copy2(origin, dest)
             except:
                 if i:
-                    print("no image to:"+ i)
+                    print(colors.fail + "no image to:"+ i + colors.reset)
                 else:
-                    print("fail to get image")
+                    print(colors.fail + "fail to get image" + colors.reset)
                 continue
             else:
                 toPrint = (i[:size] + "..." + i[(len(i) - size):]) if len(i) > (size*2) else i
-                print("image:{:<50}".format(toPrint),end="\t")
-                print("{}{}{}".format("Downloding as: ",str(down),ext))
+                print(colors.cyan + "image:{:<50}".format(toPrint),end="\t" + colors.reset)
+                print(colors.ok + "{}{}{}".format("Downloding as: ",str(down),ext) + colors.reset)
                 down += 1
 
 def parser():
