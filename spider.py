@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup as bs
 from urllib.parse import urlparse
 import shutil
 import argparse
+import os
 
 down = 1
 domain = ""
@@ -22,7 +23,6 @@ def get_image(content, url):
     global image_lst
     global down
     extensions = [".jpg",".jpeg",".png",".gif",".bmp"]
-    path = "des/"
     images = content.select('img')
     size = int(50 / 2)
     for image in images:
@@ -64,8 +64,17 @@ def get_image(content, url):
         if im and not im in image_lst and ext in extensions:
             name = path + str(down) + ext
             print(colors.ok + "{}{}".format("Downloding as: ",name) + colors.reset)
-            with open(name,'wb') as f:
-                f.write(data.content)
+            try:
+                with open(name,'wb') as f:
+                    f.write(data.content)
+            except:
+                try:
+                    os.mkdir(path)
+                    with open(name,'wb') as f:
+                        f.write(data.content)
+                except:
+                     print(colors.fail + "Failed to create file" + colors.reset)
+                     continue
             image_lst.append(im)
             down += 1 
         else:
@@ -99,7 +108,6 @@ def get_local_img(l):
     global down
     size = int(50 / 2)
     extensions = [".jpg",".jpeg",".png",".gif",".bmp"]
-    path = "des/"
     b = l.find_all('img')
     for img in b:
         i = img.get('src')
@@ -133,10 +141,23 @@ def parser():
     arg = parser.parse_args()
     return arg
 
+def checkPath(argPath):
+    print("path = :", argPath)
+    if argPath[1] != '/':
+        parent = os.getcwd()
+        print("parent: ", parent)
+        path = os.path.join(parent, argPath)
+    else:
+        path = argPath
+    if path[-1] != '/':
+        path += '/'
+    print(path)
+    return path
+
 if __name__ == "__main__":
     arg = parser()
     headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.47', 'referer':'https://www.google.com/'}
-
+    path = checkPath(arg.path)
     try:
         url = arg.url
         file = open(url)
