@@ -1,4 +1,4 @@
-# # Arachnida
+# Arachnida     [![juan-aga's 42 arachnida Score](https://badge42.vercel.app/api/v2/cli8xz75i005408mh2tn5hewj/project/3065320)](https://github.com/JaeSeoKim/badge42)
 
 This project consists of two programs, **Spider** and **Scorpion**, designed to work with image files.
 
